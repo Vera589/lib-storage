@@ -1,0 +1,53 @@
+services:
+  lib-storage-db:
+    image: postgres:latest
+    container_name: lib-storage-db
+    environment:
+      POSTGRES_USER: lib
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-randompassword}
+      POSTGRES_DB: lib-storage
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lib -d lib-storage"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  flyway:
+    image: flyway/flyway:8-alpine
+    container_name: lib_flyway
+    depends_on:
+      lib-storage-db:
+        condition: service_healthy
+    environment:
+      FLYWAY_URL: jdbc:postgresql://lib-storage-db:5432/lib-storage
+      FLYWAY_USER: lib
+      FLYWAY_PASSWORD: ${DB_PASSWORD:-randompassword}
+      FLYWAY_SCHEMAS: public
+      FLYWAY_VALIDATE_ON_MIGRATE: "true"
+    volumes:
+      - ./migration:/flyway/sql
+    command: -locations=filesystem:/flyway/sql migrate
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lib-storage-app
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+    environment:
+      DB_HOST: lib-storage-db
+      DB_PORT: 5432
+      DB_NAME: lib-storage
+      DB_USER: lib
+      DB_PASSWORD: ${DB_PASSWORD:-randompassword}
+    ports:
+      - "8000:8000"
+
+volumes:
+  postgres_data:
