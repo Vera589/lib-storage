@@ -1,5 +1,4 @@
 import uuid
-from dataclasses import dataclass
 from typing import Any, Optional, Union
 from uuid import UUID
 
@@ -8,13 +7,13 @@ from pydantic import BaseModel
 
 from app.repository.book import BookRepository
 
-@dataclass
+
 class Book(BaseModel):
     id: Union[str, None] = None
     title: Union[str, None] = None
     description: Union[str, None] = None
 
-@dataclass
+
 class BookFilter(BaseModel):
     title: Union[str, None] = None
 

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from .api import book, user, reviews, recommendation
+from app.api import book, user, reviews, recommendation
 
 app = FastAPI()
 

@@ -1,8 +1,7 @@
 import os
 import uuid
-from dataclasses import dataclass
 from datetime import timedelta, datetime, timezone
-from typing import Annotated, Union
+from typing import Annotated
 from uuid import UUID
 
 import jwt
@@ -12,6 +11,7 @@ from jwt import InvalidTokenError
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
+from app.model.user import User
 from app.repository.user import UserRepository
 
 SECRET_KEY = os.getenv('SECRET_KEY')
@@ -21,23 +21,14 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth")
 
 
-@dataclass
 class Token(BaseModel):
     access_token: str
     expire_at: str
 
 
-@dataclass
 class Credentials(BaseModel):
     username: str
     password: str
-
-
-@dataclass
-class User(BaseModel):
-    username: str
-    id: Union[str, None] = None
-    secret_hash: Union[str, None] = None
 
 
 def create_auth_token(user: User):
@@ -77,7 +68,7 @@ class AuthService:
     def authenticate(self, username: str, password: str):
         user = self.get_user(username)
         if not self.pwd_context.verify(password, user.secret_hash):
-            raise HTTPException(status_code=401, detail=f"Password is wrong")
+            raise HTTPException(status_code=401, detail="Password is wrong")
         return user
 
     def get_user_by_token(self, token: Annotated[str, Depends(oauth2_scheme)]):

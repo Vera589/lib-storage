@@ -41,20 +41,28 @@ class BaseRepository:
                 conn.rollback()
             raise e
 
-    def execute_query(self, query: Union[str, sql.Composed], params: Optional[Dict] = None) -> List[DictRow]:
+    def execute_query(
+            self,
+            query: Union[str, sql.Composed],
+            params: Optional[Dict] = None
+    ) -> List[DictRow]:
         with self._get_connection() as conn:
             conn.row_factory = dict_row
             return conn.execute(query, params).fetchall()
 
-    def execute_command(self, command: Union[str, sql.Composed], params: Optional[Dict] = None) -> None:
+    def execute_command(
+            self,
+            command: Union[str, sql.Composed],
+            params: Optional[Dict] = None
+    ) -> None:
         with self._get_connection() as conn:
             conn.execute(command, params)
 
-    def find_by_id(self, id: str) -> Optional[DictRow]:
+    def find_by_id(self, entity_id: str) -> Optional[DictRow]:
         query = sql.SQL("SELECT * FROM {} WHERE id = %(id)s").format(
             sql.Identifier(self.schema_name, self.table_name)
         )
-        result = self.execute_query(query, {"id": id})
+        result = self.execute_query(query, {"id": entity_id})
         return result[0] if result else None
 
     def find_all(self) -> List[DictRow]:
@@ -75,23 +83,26 @@ class BaseRepository:
         )
         self.execute_command(query, data)
 
-    def update(self, id: str, data: Dict) -> None:
-        set_clause = sql.SQL(', ').join(
+    def update(self, entity_id: str, data: Dict) -> None:
+        set_clause = self.build_update_params(data)
+
+        query = sql.SQL("UPDATE {} SET {} WHERE id = %(id)s").format(
+            sql.Identifier(self.schema_name, self.table_name),
+            set_clause
+        )
+        params = {"id": entity_id, **data}
+        self.execute_command(query, params)
+
+    def build_update_params(self, data: Dict):
+        return sql.SQL(', ').join(
             sql.SQL("{} = {}").format(
                 sql.Identifier(key),
                 sql.Placeholder(key)
             ) for key in data.keys()
         )
 
-        query = sql.SQL("UPDATE {} SET {} WHERE id = %(id)s").format(
-            sql.Identifier(self.schema_name, self.table_name),
-            set_clause
-        )
-        params = {"id": id, **data}
-        self.execute_command(query, params)
-
-    def delete(self, id: str) -> None:
+    def delete(self, entity_id: str) -> None:
         query = sql.SQL("DELETE FROM {} WHERE id = %(id)s").format(
             sql.Identifier(self.schema_name, self.table_name)
         )
-        self.execute_command(query, {"id": id})
+        self.execute_command(query, {"id": entity_id})

@@ -7,6 +7,7 @@ from app.repository.db import BaseRepository
 
 
 class BookRepository(BaseRepository):
+
     def __init__(self):
         super().__init__('catalog', 'book')
 

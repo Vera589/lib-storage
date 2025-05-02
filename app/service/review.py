@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Any, Union
 
 from fastapi import HTTPException
@@ -7,7 +6,7 @@ from pydantic import BaseModel
 from app.repository.book import BookRepository
 from app.repository.review import ReviewRepository
 
-@dataclass
+
 class Review(BaseModel):
     book_id: Union[str, None] = None
     rating: Union[int, None] = None
