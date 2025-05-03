@@ -5,7 +5,8 @@ from fastapi import APIRouter
 from app.service.book import BookService, Book, BookFilter
 
 router = APIRouter(
-    prefix="/books"
+    prefix="/books",
+    tags=["books"]
 )
 
 service = BookService()
@@ -19,6 +20,7 @@ def add_book(req: Book):
 @router.get("/")
 def get_books(title: Union[str, None] = None):
     return service.get_books(BookFilter(title=title))
+
 
 @router.get("/{book_id}")
 def get_book(book_id: str):

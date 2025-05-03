@@ -4,7 +4,9 @@ from app.service.auth import AuthService, create_auth_token, Token, Credentials
 
 auth_service = AuthService()
 
-router = APIRouter()
+router = APIRouter(
+    tags=["users"]
+)
 
 
 @router.post("/auth")

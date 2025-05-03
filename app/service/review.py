@@ -90,7 +90,7 @@ class ReviewService:
     def delete_review(self, user_id: str, book_id: str) -> None:
         self.review_repository.delete_by_user_id_and_book_id(user_id, book_id)
 
-    def recommendations(self) -> list[dict[str, Any]]:
+    def get_recommendations(self) -> list[dict[str, Any]]:
         top_rated_book_ids = self.top_rated_books()
         return self.book_repository.find_all_by_id(top_rated_book_ids)
 

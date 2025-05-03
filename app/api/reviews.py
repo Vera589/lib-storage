@@ -3,12 +3,13 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
 
-from app.service.auth import AuthService
 from app.model.user import User
+from app.service.auth import AuthService
 from app.service.review import ReviewService, Review
 
 router = APIRouter(
-    prefix="/reviews"
+    prefix="/reviews",
+    tags=["reviews"]
 )
 
 service = ReviewService()
