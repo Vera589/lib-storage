@@ -14,3 +14,7 @@ class BookRepository(BaseRepository):
     def find_by_title(self, title: str) -> List[DictRow]:
         query = sql.SQL("SELECT * FROM catalog.book WHERE title = %(title)s").format()
         return self.execute_query(query, {"title": title})
+
+    def find_all_by_id(self, ids: List[str]) -> List[DictRow]:
+        query = sql.SQL("SELECT * FROM catalog.book WHERE id IN (%(ids)s)").format()
+        return self.execute_query(query, {"ids": ids})

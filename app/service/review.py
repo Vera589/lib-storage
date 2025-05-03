@@ -1,10 +1,16 @@
-from typing import Any, Union
+import statistics
+from typing import Any, Union, Dict, List
 
 from fastapi import HTTPException
 from pydantic import BaseModel
 
 from app.repository.book import BookRepository
 from app.repository.review import ReviewRepository
+from app.repository.user import UserRepository
+
+MAX_WEIGHTED_REVIEW_NUM = 10
+REVIEW_NUM_INFLUENCE_RATE = 20
+TOP_RATED_BOOKS_NUM = 5
 
 
 class Review(BaseModel):
@@ -18,6 +24,7 @@ class ReviewService:
     def __init__(self):
         self.review_repository = ReviewRepository()
         self.book_repository = BookRepository()
+        self.user_repository = UserRepository()
 
     def add_review(self, user_id: str, review: Review) -> None:
         if self.review_repository.find_by_user_id_and_book_id(user_id, review.book_id) is not None:
@@ -82,3 +89,45 @@ class ReviewService:
 
     def delete_review(self, user_id: str, book_id: str) -> None:
         self.review_repository.delete_by_user_id_and_book_id(user_id, book_id)
+
+    def recommendations(self) -> list[dict[str, Any]]:
+        top_rated_book_ids = self.top_rated_books()
+        return self.book_repository.find_all_by_id(top_rated_book_ids)
+
+    def top_rated_books(self) -> List[str]:
+        all_reviews = self.review_repository.find_all()
+        all_reviews_by_book: Dict[List] = {}
+        for reviews in all_reviews:
+            book_id = reviews["book_id"]
+            if book_id in all_reviews_by_book:
+                all_reviews_by_book[book_id].append(reviews)
+            else:
+                all_reviews_by_book[book_id] = [reviews]
+        all_books_weighted_rating: List[Dict] = []
+        for book_id, reviews in all_reviews_by_book:
+            median_rating = self.__median_rating(reviews)
+            weighted_rating = self.__weighted_rating(median_rating, len(reviews))
+            all_books_weighted_rating.append(
+                {"book_id": book_id, "value": weighted_rating}
+            )
+        top_rated_books = sorted(
+            all_books_weighted_rating,
+            key=lambda r: r["value"],
+            reverse=True
+        )[:TOP_RATED_BOOKS_NUM]
+        return list(map(lambda b: b["book_id"], top_rated_books))
+
+    def __median_rating(self, reviews: List[Dict]):
+        all_ratings = []
+        for review in reviews:
+            all_ratings.append(review["rating"])
+        return statistics.median(all_ratings)
+
+    def __weighted_rating(self, rating: int, review_num: int):
+        base_rate = (100 - REVIEW_NUM_INFLUENCE_RATE) / 100
+        review_num_dependant_rate = 1 - base_rate
+        return rating * (
+                base_rate
+                + review_num_dependant_rate
+                * MAX_WEIGHTED_REVIEW_NUM / max(review_num, MAX_WEIGHTED_REVIEW_NUM)
+        )
