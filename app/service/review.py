@@ -96,6 +96,7 @@ class ReviewService:
 
     def top_rated_books(self) -> List[str]:
         all_reviews = self.review_repository.find_all()
+        print("All reviews " + str(len(all_reviews)))
         all_reviews_by_book: Dict[List] = {}
         for reviews in all_reviews:
             book_id = reviews["book_id"]
@@ -104,12 +105,13 @@ class ReviewService:
             else:
                 all_reviews_by_book[book_id] = [reviews]
         all_books_weighted_rating: List[Dict] = []
-        for book_id, reviews in all_reviews_by_book:
+        for book_id, reviews in all_reviews_by_book.items():
             median_rating = self.__median_rating(reviews)
             weighted_rating = self.__weighted_rating(median_rating, len(reviews))
             all_books_weighted_rating.append(
                 {"book_id": book_id, "value": weighted_rating}
             )
+        print("All weighted ratings " + str(len(all_books_weighted_rating)))
         top_rated_books = sorted(
             all_books_weighted_rating,
             key=lambda r: r["value"],

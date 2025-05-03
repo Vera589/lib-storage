@@ -8,4 +8,4 @@ service = ReviewService()
 
 @router.get("/recommendations")
 def read_reviews():
-    return service.top_rated_books()
+    return service.recommendations()

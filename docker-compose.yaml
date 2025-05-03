@@ -1,5 +1,5 @@
 services:
-  lib-storage-db:
+  db:
     image: postgres:latest
     container_name: lib-storage-db
     env_file:
@@ -19,13 +19,13 @@ services:
       retries: 5
 
   flyway:
-    image: flyway/flyway:8-alpine
-    container_name: lib_flyway
+    image: flyway/flyway:latest
+    container_name: lib-flyway
     depends_on:
-      lib-storage-db:
+      db:
         condition: service_healthy
     environment:
-      FLYWAY_URL: jdbc:postgresql://lib-storage-db:5432/lib-storage
+      FLYWAY_URL: jdbc:postgresql://db:5432/lib-storage
       FLYWAY_USER: lib
       FLYWAY_PASSWORD: ${DB_PASSWORD:-randompassword}
       FLYWAY_SCHEMAS: public
@@ -45,7 +45,7 @@ services:
     env_file:
       - .env
     environment:
-      DB_HOST: lib-storage-db
+      DB_HOST: db
       DB_PORT: 5432
       DB_NAME: lib-storage
       DB_USER: lib
