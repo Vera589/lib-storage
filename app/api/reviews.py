@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
+from starlette.responses import Response
 
 from app.model.user import User
 from app.service.auth import AuthService
@@ -23,7 +24,8 @@ def create_review(
         user: Annotated[User, Depends(auth_service.get_user_by_token)],
         req: Review
 ):
-    return service.add_review(user.id, req)
+    service.add_review(user.id, req)
+    return Response(status_code=201)
 
 
 @router.get("/{book_id}")
@@ -47,7 +49,7 @@ def update_review(
         book_id: str,
         req: Review
 ):
-    return service.update_review(user.id, book_id, req)
+    service.update_review(user.id, book_id, req)
 
 
 @router.delete("/{book_id}", status_code=204)
@@ -55,4 +57,4 @@ def delete_review(
         user: Annotated[User, Depends(auth_service.get_user_by_token)],
         book_id: str
 ):
-    return service.delete_review(user.id, book_id)
+    service.delete_review(user.id, book_id)

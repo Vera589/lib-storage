@@ -29,7 +29,7 @@ class ReviewRepository(BaseRepository):
 
         query = sql.SQL(
             "UPDATE {} SET {} "
-            "WHERE user_id = %(user_id)s book_id = %(book_id)s"
+            "WHERE user_id = %(user_id)s AND book_id = %(book_id)s"
         ).format(
             sql.Identifier(self.schema_name, self.table_name),
             set_clause
